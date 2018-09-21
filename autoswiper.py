@@ -115,7 +115,9 @@ def check_if_matched():
 
         chat_box = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/form/textarea") ## CHATbox
         line = config.message_to_send
-        chat_box.send_keys(line[extra.random_pickup_line])
+        number = len(extra.random_pickup_line)
+        number -= 1
+        chat_box.send_keys(line[number])
         log('***** Wrote message on chat_box')
         
         time.sleep(time_between)
