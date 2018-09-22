@@ -12,14 +12,15 @@ Selenium bot that randomizes time between decisions, and sends messages if there
 
 * Once the venv is initialized `pip install -r requirements.txt` this will install all dependencies
 
-* Now you are free to run it `python autoswiper.py`
+* Now you are free to run it `python main.py`
+
+** Make sure to submit your email and password as a string: 'youremail@gmail.com' and 'yourpassword'
 
 ## requirements:
 
 selenium==3.12.0
 
 ## Notes:
-
 
 * Chromedriver binary - It is already in the repo, but feel free to download a new one if you don't trust this one. Just make sure to add it to working folder as in config.py
 
