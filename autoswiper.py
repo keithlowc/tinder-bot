@@ -1,208 +1,202 @@
-#!/usr/bin/env python 
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.options import Options
 
+import random
 import time
+import os
+import platform
 import logging
-import extra
-import config
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+if platform.system() == 'Linux':
+    path_of_chrome_driver = dir_path + '/drivers/chromedriver_linux'
+elif platform.system() == 'Darwin':
+    path_of_chrome_driver = dir_path + '/drivers/chromedriver_mac'
+else:
+    path_of_chrome_driver = dir_path + '/drivers/chromedriver_windows.exe'
 
 date_time_log = time.strftime('%d/%m/%Y %H:%M:%S')
 chrome_settings = Options()
-#chrome_settings.add_argument('--headless') - Headless mode still in development
-#chrome_settings.add_argument('--window-size=1920x1080') - Headless mode still in development
 
-options = webdriver.ChromeOptions()
-prefs = {"profile.default_content_setting_values.notifications" : 2}
-options.add_experimental_option('prefs', prefs)
-driver = webdriver.Chrome(config.path_of_chrome_driver, options=options, chrome_options=chrome_settings)
+random_time_range_start = 1
+random_time_range_end = 3
 
-def log(message):
-    logging.basicConfig(filename='autoswiper.log',level=logging.DEBUG)
-    logging.debug((message.upper()) + ' ' + date_time_log)
-    print(message)
-    
-'''
-(STEP 1)
-Opens tinder website
-'''
-def openTinder():
-    log('***** from openTinder() START *****')
-    try:
-        driver.get("https://tinder.com/app/login")
-        time.sleep(7)
-        driver.implicitly_wait(60)
-        driver.find_element(By.XPATH, '/html/body/div[2]/div/div/div[2]/div/div[3]/div[1]/button').click()
-        log('***** Opening Tinder!')
-    except NoSuchElementException as e:
-        log('ERROR: ' + e)
-    log('***** from openTinder() END *****')
+message_to_send = ["Hey! I heard you are good in algebra, can you replace my X without asking Y? :)",
+                   "Do you have a band aid? because I scrape my knee falling for you!",
+                   "Hey whats up! :)",
+                   "Hey!"]
 
-print (time.strftime('%d/%m/%Y %H:%M:%S'))
-    
-'''
-(STEP 2)
-Sends your information into the facebook form, and logs you in
-'''
-def fbLogin():
-    log('***** from fbLogin() START *****')
-    driver.implicitly_wait(20)
-    driver.find_element_by_xpath('//*[@id="email"]').send_keys(config.username) 
-    driver.find_element_by_xpath('//*[@id="pass"]').send_keys(config.password)
-    driver.find_element_by_xpath('//*[@id="u_0_0"]').click()
-    log('***** Logged in!')
-    log('***** from fbLogin() END *****')
+class Randomizer:
+	def decision(self):
+		x = random.randint(0,1)
+		return x
 
-'''
-(STEP 3)
-Clicks the new intro tinder website has
-'''
-def skip_intro():
-    log('***** skip_intro START ****')
-    try:
-        driver.implicitly_wait(10)
-        time.sleep(2)
-        next_1 = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[2]/div/div[1]/div[1]/div/div[3]/button")
-        next_1.click()
-        
-        driver.implicitly_wait(10)
-        time.sleep(2)
-        next_2 = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[2]/div/div/main/div/div[3]/button")
-        next_2.click()
+	def random_time(self):
+		x = random.randint(random_time_range_start,random_time_range_end)
+		return x
 
-        driver.implicitly_wait(10)
-        time.sleep(2)
-        location_3 = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[2]/div/div/div[1]/div/div[3]/button[1]")
-        location_3.click()
+	def random_pickup_line(self):
+		amount_of_pickup_lines = len(message_to_send)
+		amount_of_pickup_lines -= 1
+		x = random.randint(0,amount_of_pickup_lines)
+		return x
 
-        driver.implicitly_wait(10)
-        time.sleep(2)
-        no_notifications_4 = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[2]/div/div/div[1]/div/div[3]/button[2]")
-        no_notifications_4.click()
-    except NoSuchElementException as e:
-        log('ERROR: ' + e)
-        log('Skipping clicks!')
-    log('***** skip_intro END ****')
 
-'''
-(STEP 4 only if matched!)
-Check if there is any match and if there is, it will proceed to send them a message from config.py
-'''
-def check_if_matched():
-    log('***** check_if_matched START *****')
-    matched = False
-    time_between = extra.random_time()
-    try:
-        driver.implicitly_wait(5)
-        send_message_to_match = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div[2]/div[2]/div[1]/div/a")
-        keep_swiping = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div[2]/div[2]/div[1]/div/button")
-        log('***** Found Match!')
+class TinderBot:
+	def __init__(self, username, password):
+		self.username = username
+		self.password = password
+		self.driver = webdriver.Chrome(path_of_chrome_driver, chrome_options=chrome_settings)
+		self.randomizer = Randomizer()
 
-        if send_message_to_match:
-            matched = True
+	def log(self,message):
+		logging.basicConfig(filename='autoswiper.log',level=logging.DEBUG)
+		logging.debug((message.upper()) + ' ' + date_time_log)
+		print(message)
 
-    except NoSuchElementException:
-        log('***** No matches! :(')
+	def open_tinder(self):
+		self.log('***** from openTinder() START *****')
+		try:
+			self.driver.get("https://tinder.com/app/login")
+			time.sleep(7)
+			self.driver.implicitly_wait(60)
+			log_in = self.driver.find_element(By.XPATH,'/html/body/div[2]/div/div/div[2]/div/div[3]/div[1]/button')
+			log_in.click()
+		except NoSuchElementException as e:
+			self.log('***** ERROR: ' + str(e))
+			self.log('***** from openTinder() END *****')
+		self.driver.switch_to_window(self.driver.window_handles[-1])
 
-    if matched == True:
-        send_message_to_match.click()
-        log('***** Im inside the match chat!')
+	def fb_login(self):
+		self.log('***** from fbLogin() START *****')
+		self.driver.implicitly_wait(20)
+		self.driver.find_element_by_xpath('//*[@id="email"]').send_keys(self.username)
+		self.driver.find_element_by_xpath('//*[@id="pass"]').send_keys(self.password)
+		self.driver.find_element_by_xpath('//*[@id="u_0_0"]').click()
+		self.driver.switch_to_window(self.driver.window_handles[0])
+		self.log('***** Logged in!')
+		self.log('***** from fbLogin() END *****')
 
-        time.sleep(time_between)
+	def skip_intro(self):
+		self.log('***** skip_intro START *****')
+		try:
+			self.driver.implicitly_wait(10)
+			time.sleep(2)
+			next_1 = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[2]/div/div[1]/div[1]/div/div[3]/button")
+			next_1.click()
 
-        chat_box = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/form/textarea") ## CHATbox
-        line = config.message_to_send
-        number = len(extra.random_pickup_line)
-        number -= 1
-        chat_box.send_keys(line[number])
-        log('***** Wrote message on chat_box')
-        
-        time.sleep(time_between)
+			self.driver.implicitly_wait(10)
+			time.sleep(2)
+			next_2 = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[2]/div/div/main/div/div[3]/button")
+			next_2.click()
 
-        send_button = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/form/button")
-        send_button.click()
-        log('***** Message was sent!')
+			self.driver.implicitly_wait(10)
+			time.sleep(2)
+			location_3 = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[2]/div/div/div[1]/div/div[3]/button[1]")
+			location_3.click()
 
-        time.sleep(time_between)
+			self.driver.implicitly_wait(10)
+			time.sleep(2)
+			no_notifications_4 = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[2]/div/div/div[1]/div/div[3]/button[2]")
+			no_notifications_4.click()
+		except NoSuchElementException as e:
+			self.log('***** ERROR: ' + str(e))
+			self.log('Skipping clicks!')
+		self.log('***** skip_intro END *****')
 
-        exit = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/nav/a/div")
-        exit.click()
-        log('***** I have exited the match! and messaged succesfully')
-        log('***** Will keep swiping!')
-    else:
-        log('***** No matches *****')
-    log('***** check_if_matched END *****')
+	def check_if_matched(self):
+		self.log('***** check_if_matched START *****')
+		matched = False
+		time_between = self.randomizer.random_time()
+		try:
+			self.driver.implicitly_wait(5)
+			send_message_to_match = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div[2]/div[2]/div[1]/div/a")
+			keep_swiping = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div[2]/div[2]/div[1]/div/button")
+			self.log('****** Found Match!')
 
-'''
-(BONUS STEP)
-Makes the bot to click around the pictures of each profile. Under development still
-'''
-def click_around():
-    log('***** click_around START *****')
-    driver.implicitly_wait(60)
-    image = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[1]/div[3]/div[1]")
-    time_between = extra.random_time()
-    log("***** click_around() The time to wait is: " + str(time_between))
-    time.sleep(time_between)
-    image.click()
-    exit = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div[1]/div[1]/a[1]")
-    log("***** Found exit!")
-    log("***** Image clicked with time of: " + str(time_between))
+			if send_message_to_match:
+				matched = True
 
-    try:
-        driver.implicitly_wait(5)
-        next_pic = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div[1]/div[1]/a[2]/div/div[2]/button[2]")
-        log("***** Found next_pic")
-    except NoSuchElementException:
-        log("***** couldn't find anything")
-        exit.click()
-        log("***** Exited")
-        return
+		except NoSuchElementException as e:
+			self.log('***** ERROR: ' + str(e))
+			self.log('***** No Matches! :(\n')
 
-    next_pic.click()
-    log("***** Next image")
-    time.sleep(1)
-    exit.click()
-    log("***** Exited")
-    time.sleep(2)
-    log('***** click_around END *****')
+		if matched == True:
+			send_message_to_match.click()
+			self.log('***** Im inside the match chat!')
 
-'''
-(FINAL STEP)
-Main logic is here. Likes and dislikes + calling other methods here
-'''
-def like():
-    while True:
-        log('***** like() Main function within script START ')
-        try:
-            driver.implicitly_wait(60)
-            like = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[2]/button[4]/span")
-            dislike = driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[2]/button[2]/span")
-            time_between = extra.random_time()
-            log("***** Like() The time to wait is: " + str(time_between))
-            time.sleep(time_between)
-            decision = extra.decision()
-            log("***** Took decision: " + str(decision))
-            if decision == 1:
-                like.click()
-                log("***** Liked! with decision: " + str(decision) + " and time in between : " + str(time_between))
-                check_if_matched()
-            elif decision == 0:
-                dislike.click()
-                log("***** Disliked! with decision: " + str(decision) + " and time in between : " + str(time_between))
-        except NoSuchElementException:
-            log("***** ERROR")
-        log('***** like() Main function within script END *****')
-            
-if __name__ == "__main__":
-    openTinder()
-    driver.switch_to_window(driver.window_handles[-1])
-    fbLogin()
-    driver.switch_to_window(driver.window_handles[0])
-    skip_intro()
-    like()
-    
+			time.sleep(time_between)
 
+			chat_box = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/form/textarea")
+			random_val = self.randomizer.random_pickup_line()
+			line = message_to_send
+
+			chat_box.send_keys(line[random_val])
+			self.log('***** Wrote Message on chat_box')
+
+			time.sleep(time_between)
+
+			send_button = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/form/button")
+			send_button.click()
+			self.log(time_between)
+
+			time.sleep(time_between)
+
+			exit = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div/div[1]/div/div/nav/a/div")
+			exit.click()
+			self.log('***** I have exited the match! and messaged succesfully')
+			self.log('***** Will keep swiping!')
+		else:
+			self.log('***** No matches *****')
+		self.log('***** check_if_matched END *****')
+
+	def like(self):
+		while True:
+			self.log('***** like() Main function within script START ')
+			try:
+				self.driver.implicitly_wait(60)
+				like = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[2]/button[4]/span")
+				dislike = self.driver.find_element(By.XPATH,"/html/body/div[1]/div/span/div/div[1]/div/main/div[1]/div/div/div[1]/div/div[2]/button[2]/span")
+				time_between = self.randomizer.random_time()
+				self.log('***** like() The time to wait is: ' + str(time_between))
+				time.sleep(time_between)
+				decision = self.randomizer.decision()
+				self.log('***** Took decision: ' + str(decision))
+				if decision == 1:
+					like.click()
+					self.log('***** Liked! with decision: ' + str(decision) + ' and time in between: ' + str(time_between))
+					self.check_if_matched()
+				else:
+					dislike.click()
+					self.log('***** Disliked! with decision: ' + str(decision) + ' and time in between: ' + str(time_between))
+			except NoSuchElementException as e:
+				self.log('***** ERROR: ' + str(e))
+			self.log('***** like() Main function within script END *****')
+
+	def start(self):
+		try:
+			self.open_tinder()
+			self.fb_login()
+			self.skip_intro()
+			self.check_if_matched()
+			self.like()
+			self.driver.quit()
+		except Exception as error:
+			self.log('***** ERROR FROM start() *****')
+			self.log(str(error))
+
+
+
+
+
+
+
+
+
+
+
+
+		
